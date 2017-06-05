@@ -1,5 +1,6 @@
 package com.example.vartikasharma.backgroundlocationtracking;
 
+import android.location.LocationManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
@@ -10,6 +11,8 @@ import com.google.android.gms.maps.MapFragment;
 public class MainActivity extends AppCompatActivity {
     // Google Map
     private GoogleMap googleMap;
+    // Declaring a Location Manager
+    protected LocationManager locationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
