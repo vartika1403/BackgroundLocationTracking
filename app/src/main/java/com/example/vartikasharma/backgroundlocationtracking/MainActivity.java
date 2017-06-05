@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private void initilizeMap() {
         if (googleMap == null) {
             googleMap = ((MapFragment) getFragmentManager().findFragmentById(
-                    R.id.map)).getMap();
+                    R .id.map)).getMap();
 
             // check if map is created successfully or not
             if (googleMap == null) {
