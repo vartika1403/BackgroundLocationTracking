@@ -3,6 +3,8 @@ package com.example.vartikasharma.backgroundlocationtracking;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,8 +13,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+
 
 import java.util.Date;
 
@@ -20,7 +27,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity  implements OnMapReadyCallback,LocationListener,
+        GoogleMap.OnMapClickListener, GoogleApiClient.ConnectionCallbacks{
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     // Google Map
     private GoogleMap googleMap;
@@ -36,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
     //flag for internet connection status
     boolean isInternetPresent = false;
+    private GoogleApiClient googleApiClient;
 
     private Date start_date;
     private Date stop_date;
@@ -62,6 +71,11 @@ public class MainActivity extends AppCompatActivity {
                     "Please connect to working Internet connection", false);
             // stop executing code by return
             return;
+        }
+        if (googleApiClient == null) {
+            googleApiClient= new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addApi(LocationServices.API).build();
         }
 
         try {
@@ -101,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
         long startDate = start_date.getTime();
         long stopDate = stop_date.getTime();
         long totalTime = stopDate - startDate;
-        Log.d(LOG_TAG, "duration, " + totalTime);
+        Log.d(LOG_TAG, "duration, " + totalTime/60);
         totalShiftTime.setText(" " + totalTime);
 
     }
@@ -151,5 +165,45 @@ public class MainActivity extends AppCompatActivity {
 
         // Showing Alert Message
         alertDialog.show();
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onMapClick(LatLng latLng) {
+
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+
+    }
+
+    @Override
+    public void onStatusChanged(String s, int i, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String s) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String s) {
+
     }
 }
