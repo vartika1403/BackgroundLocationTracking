@@ -1,11 +1,17 @@
 package com.example.vartikasharma.backgroundlocationtracking;
 
+import android.Manifest;
 import android.app.AlertDialog;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,15 +19,33 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -45,6 +69,15 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     //flag for internet connection status
     boolean isInternetPresent = false;
     private GoogleApiClient googleApiClient;
+    private Location lastLocation;
+    private LatLng destinationLatLng;
+    private LocationRequest locationRequest;
+
+    private static final int PERMISSION_LOCATION_REQUEST_CODE = 100;
+    private List<LatLng> latLngList;
+    private MarkerOptions markerOption;
+    private double latitudeValue = 0.0;
+    private double longitudeValue = 0.0;
 
     private Date start_date;
     private Date stop_date;
@@ -78,6 +111,8 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                     .addApi(LocationServices.API).build();
         }
 
+        locationRequest = createLocationRequest();
+
         try {
             // Loading map
             initilizeMap();
@@ -94,6 +129,14 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         }
 
 
+    }
+
+    private LocationRequest createLocationRequest() {
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setInterval(5000);
+        locationRequest.setFastestInterval(3000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        return locationRequest;
     }
 
     @OnClick(R.id.start_shift)
@@ -117,7 +160,7 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         long totalTime = stopDate - startDate;
         Log.d(LOG_TAG, "duration, " + totalTime/60);
         totalShiftTime.setText(" " + totalTime);
-
+        //getDestinationLatLong(latLng);
     }
 
     /**
@@ -141,6 +184,17 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     protected void onResume() {
         super.onResume();
         initilizeMap();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        googleApiClient.connect();
+    }
+    @Override
+    protected void onStop() {
+        googleApiClient.disconnect();
+        super.onStop();
     }
 
     public void showAlertDialog(Context context, String title, String message,
@@ -169,6 +223,59 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
 
     @Override
     public void onConnected(Bundle bundle) {
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+        PendingResult<LocationSettingsResult> result = LocationServices.SettingsApi
+                .checkLocationSettings(googleApiClient, builder.build());
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(@NonNull LocationSettingsResult result) {
+                final Status status = result.getStatus();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        Log.d(LOG_TAG, "Connection method has been called");
+                        if (ActivityCompat.checkSelfPermission(getApplicationContext(), 
+                                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                                && ActivityCompat.checkSelfPermission(getApplicationContext(), 
+                                Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                            lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+                            assignLocationValues(lastLocation);
+                            setDefaultMarkerOption(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
+                        }else{
+                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_LOCATION_REQUEST_CODE);
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        break;
+                }
+            }
+        });
+    }
+
+    private void setDefaultMarkerOption(LatLng latLng) {
+    }
+
+    private void assignLocationValues(Location currentLocation) {
+        if ( currentLocation != null) {
+            latitudeValue = currentLocation.getLatitude();
+            longitudeValue = currentLocation.getLongitude();
+            Log.d(LOG_TAG, "Latitude: " + latitudeValue + " Longitude: " + longitudeValue);
+            markStartingLocationOnMap(googleMap, new LatLng(latitudeValue, longitudeValue));
+            addCameraToMap(new LatLng(latitudeValue, longitudeValue));
+        }
+    }
+
+    private void markStartingLocationOnMap(GoogleMap googleMap, LatLng latLng) {
+        googleMap.addMarker(new MarkerOptions().position(latLng).title("Current location"));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+    }
+
+    private void addCameraToMap(LatLng latLng) {
+        CameraPosition cameraPosition = new CameraPosition.Builder()
+                .target(latLng)
+                .zoom(16)
+                .build();
+        googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
     }
 
@@ -179,12 +286,145 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
 
     @Override
     public void onMapClick(LatLng latLng) {
+        if (latLngList.size() > 0) {
+            refreshMap(googleMap);
+            latLngList.clear();
+        }
+        latLngList.add(latLng);
+        Log.d(LOG_TAG, "Marker number " + latLngList.size());
+        getDestinationLatLong(latLng);
+       /* googleMap.addMarker(markerOption);
+        googleMap.addMarker(new MarkerOptions().position(latLng));
+        LatLng defaultLocation = markerOption.getPosition();
+        destinationLatLng = latLng;
+        //use Google Direction API to get the route between these Locations
+        String directionApiPath = Helper.getUrl(String.valueOf(defaultLocation.latitude), String.valueOf(defaultLocation.longitude),
+                String.valueOf(destinationLatLng.latitude), String.valueOf(destinationLatLng.longitude));
+        Log.d(LOG_TAG, "Path " + directionApiPath);
+        getDirectionFromDirectionApiServer(directionApiPath);*/
+    }
 
+    private void getDestinationLatLong(LatLng latLng) {
+        googleMap.addMarker(markerOption);
+        googleMap.addMarker(new MarkerOptions().position(latLng));
+        LatLng defaultLocation = markerOption.getPosition();
+        destinationLatLng = latLng;
+        //use Google Direction API to get the route between these Locations
+        String directionApiPath = Helper.getUrl(String.valueOf(defaultLocation.latitude), String.valueOf(defaultLocation.longitude),
+                String.valueOf(destinationLatLng.latitude), String.valueOf(destinationLatLng.longitude));
+        Log.d(LOG_TAG, "Path " + directionApiPath);
+        getDirectionFromDirectionApiServer(directionApiPath);
+    }
+
+    private void getDirectionFromDirectionApiServer(String directionApiPath) {
+        GsonRequest<DirectionObject> serverRequest = new GsonRequest<DirectionObject>(
+                Request.Method.GET,
+                directionApiPath,
+                DirectionObject.class,
+                createRequestSuccessListener(),
+                createRequestErrorListener());
+        serverRequest.setRetryPolicy(new DefaultRetryPolicy(
+                Helper.MY_SOCKET_TIMEOUT_MS,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(serverRequest);
+    }
+
+    private Response.ErrorListener createRequestErrorListener() {
+        return new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        };
+    }
+
+    private Response.Listener<DirectionObject> createRequestSuccessListener() {
+        return new Response.Listener<DirectionObject>() {
+            @Override
+            public void onResponse(DirectionObject response) {
+                try {
+                    Log.d("JSON Response", response.toString());
+                    if(response.getStatus().equals("OK")){
+                        List<LatLng> directions = getDirectionPolylines(response.getRoutes());
+                        drawRouteOnMap(googleMap, directions);
+                    }else{
+                        Toast.makeText(MainActivity.this, "error in server", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            };
+        };
+    }
+
+    private List<LatLng> getDirectionPolylines(List<RouteObject> routes) {
+        List<LatLng> directionList = new ArrayList<LatLng>();
+        for(RouteObject route : routes){
+            List<LegsObject> legs = route.getLegs();
+            for(LegsObject leg : legs){
+                List<StepsObject> steps = leg.getSteps();
+                for(StepsObject step : steps){
+                    PolyLineObject polyline = step.getPolyline();
+                    String points = polyline.getPoints();
+                    List<LatLng> singlePolyline = decodePoly(points);
+                    for (LatLng direction : singlePolyline){
+                        directionList.add(direction);
+                    }
+                }
+            }
+        }
+        return directionList;
+    }
+
+    private List<LatLng> decodePoly(String points) {
+        List<LatLng> poly = new ArrayList<>();
+        int index = 0, len = points.length();
+        int lat = 0, lng = 0;
+        while (index < len) {
+            int b, shift = 0, result = 0;
+            do {
+                b = points.charAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+            lat += dlat;
+            shift = 0;
+            result = 0;
+            do {
+                b = points.charAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+            lng += dlng;
+            LatLng p = new LatLng((((double) lat / 1E5)),
+                    (((double) lng / 1E5)));
+            poly.add(p);
+        }
+        return poly;
+    }
+
+    private void drawRouteOnMap(GoogleMap map, List<LatLng> positions){
+        PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
+        options.addAll(positions);
+        Polyline polyline = map.addPolyline(options);
+        CameraPosition cameraPosition = new CameraPosition.Builder()
+                .target(new LatLng(positions.get(1).latitude, positions.get(1).longitude))
+                .zoom(17)
+                .build();
+        map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+    }
+
+    private void refreshMap(GoogleMap googleMap) {
+        googleMap.clear();
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-
+        this.googleMap = googleMap;
+        googleMap.setOnMapClickListener(this);
     }
 
     @Override
