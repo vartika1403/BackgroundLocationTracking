@@ -8,10 +8,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -34,10 +37,14 @@ public class MainActivity extends AppCompatActivity {
     //flag for internet connection status
     boolean isInternetPresent = false;
 
+    private Date start_date;
+    private Date stop_date;
     @BindView(R.id.start_shift)
     public Button startShift;
     @BindView(R.id.stop_shift)
     public Button stopShift;
+    @BindView(R.id.total_shift_time_value)
+    public TextView totalShiftTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +84,25 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.start_shift)
     public void startShift() {
+        if (locationTracker.canGetLocation()) {
+            Log.d(LOG_TAG, "latitute: " + locationTracker.getLatitude() + ",longitute: " + locationTracker.getLongitude());
+        }
+        start_date = new Date(System.currentTimeMillis());
+        Log.d(LOG_TAG, "start current date, " + start_date);
+    }
+
+    @OnClick(R.id.stop_shift)
+    public void stopShift() {
+        if (locationTracker.canGetLocation()) {
+            Log.d(LOG_TAG, "latitute: " + locationTracker.getLatitude() + ",longitute: " + locationTracker.getLongitude());
+        }
+        stop_date = new Date(System.currentTimeMillis());
+        Log.d(LOG_TAG, "stop current date, " + stop_date);
+        long startDate = start_date.getTime();
+        long stopDate = stop_date.getTime();
+        long totalTime = stopDate - startDate;
+        Log.d(LOG_TAG, "duration, " + totalTime);
+        totalShiftTime.setText(" " + totalTime);
 
     }
 

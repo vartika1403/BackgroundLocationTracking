@@ -31,4 +31,31 @@
         android:layout_alignParentBottom="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:id="@+id/total_time"
+        android:layout_marginTop="15dp"
+        android:orientation="horizontal"
+        android:layout_width="500dp"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/rectangle">
+
+        <TextView
+            android:id="@+id/total_shift_time_text"
+            android:text="Total shift time"
+            android:layout_marginLeft="30dp"
+            android:layout_marginStart="30dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/total_shift_time_value"
+            android:layout_marginLeft="30dp"
+            android:layout_marginStart="30dp"
+            android:text="2 hr "
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
 </RelativeLayout>
