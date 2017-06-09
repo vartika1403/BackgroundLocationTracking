@@ -1,6 +1,7 @@
 package com.example.vartikasharma.backgroundlocationtracking;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.Context;
@@ -146,6 +147,10 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         }
         start_date = new Date(System.currentTimeMillis());
         Log.d(LOG_TAG, "start current date, " + start_date);
+        LatLng lplace = new LatLng(locationTracker.getLatitude(), locationTracker.getLatitude());
+        googleMap.addMarker(new MarkerOptions().position(lplace).title("Present Place"));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(lplace));
+        setDefaultMarkerOption(new LatLng(locationTracker.getLatitude(), locationTracker.getLongitude()));
     }
 
     @OnClick(R.id.stop_shift)
@@ -153,13 +158,14 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         if (locationTracker.canGetLocation()) {
             Log.d(LOG_TAG, "latitute: " + locationTracker.getLatitude() + ",longitute: " + locationTracker.getLongitude());
         }
-        stop_date = new Date(System.currentTimeMillis());
-        Log.d(LOG_TAG, "stop current date, " + stop_date);
-        long startDate = start_date.getTime();
-        long stopDate = stop_date.getTime();
-        long totalTime = stopDate - startDate;
-        Log.d(LOG_TAG, "duration, " + totalTime/60);
-        totalShiftTime.setText(" " + totalTime);
+//        stop_date = new Date(System.currentTimeMillis());
+  //      Log.d(LOG_TAG, "stop current date, " + stop_date);
+//        long startDate = start_date.getTime();
+       // long stopDate = stop_date.getTime();
+      //  long totalTime = stopDate - startDate;
+       // Log.d(LOG_TAG, "duration, " + totalTime/60);
+        //totalShiftTime.setText(" " + totalTime);
+        setDefaultMarkerOption(new LatLng(locationTracker.getLatitude(), locationTracker.getLongitude()));
         //getDestinationLatLong(latLng);
     }
 
@@ -234,11 +240,12 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
                         Log.d(LOG_TAG, "Connection method has been called");
-                        if (ActivityCompat.checkSelfPermission(getApplicationContext(), 
+                        if (ActivityCompat.checkSelfPermission(getApplicationContext(),
                                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                                 && ActivityCompat.checkSelfPermission(getApplicationContext(), 
                                 Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                             lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+                            Log.d(LOG_TAG, "lastLocation," + lastLocation);
                             assignLocationValues(lastLocation);
                             setDefaultMarkerOption(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
                         }else{
@@ -253,6 +260,12 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     }
 
     private void setDefaultMarkerOption(LatLng latLng) {
+        if(markerOption == null){
+            Log.d(LOG_TAG, "default marker location, " + latLng);
+            markerOption = new MarkerOptions();
+        }
+        Log.d(LOG_TAG, "default marker location, "+ latLng);
+        markerOption.position(latLng);
     }
 
     private void assignLocationValues(Location currentLocation) {
@@ -273,7 +286,7 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     private void addCameraToMap(LatLng latLng) {
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(latLng)
-                .zoom(16)
+                .zoom(8)
                 .build();
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 

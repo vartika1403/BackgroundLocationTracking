@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "345227629407",
+    "project_id": "driven-elixir-130021"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:345227629407:android:29956befdad29bda",
+        "android_client_info": {
+          "package_name": "com.example.vartikasharma.backgroundlocationtracking"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "345227629407-stnoajfhdu4je1ue7sc26bear7lffteo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.vartikasharma.backgroundlocationtracking",
+            "certificate_hash": "e43d6a2038744b10b5358ffbc368af1e93cc28da"
+          }
+        },
+        {
+          "client_id": "345227629407-r6hho30hloe27m9ci46he14tkgs9vmb0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcdAWD65vqChfgWEd5KLc8JZW4a04qeDs"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
