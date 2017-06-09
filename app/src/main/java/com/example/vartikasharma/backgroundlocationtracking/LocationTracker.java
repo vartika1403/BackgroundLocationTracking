@@ -2,6 +2,7 @@ package com.example.vartikasharma.backgroundlocationtracking;
 
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Service;
 import android.content.Context;
@@ -68,7 +69,12 @@ public class LocationTracker extends Service implements LocationListener {
             this.canGetLocation = true;
             // First get location from Network Provider
             if (isNetworkEnabled) {
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission((Activity)context,
+                        Manifest.permission.ACCESS_FINE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED
+                        && ActivityCompat.checkSelfPermission((Activity)context,
+                        Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
                     return;
                 }
                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
