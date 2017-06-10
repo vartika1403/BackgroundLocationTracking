@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     boolean isInternetPresent = false;
     private GoogleApiClient googleApiClient;
     private Location lastLocation;
+    private Location startLocation;
     private LatLng destinationLatLng;
     private LocationRequest locationRequest;
 
@@ -156,8 +157,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return;
         }
         lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        startLocation = lastLocation;
         Log.d(LOG_TAG, "startlastLocation," + lastLocation);
-        assignLocationValues(lastLocation);
+        assignLocationValues(lastLocation, "StartLocation");
         setDefaultMarkerOption(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
        // setDefaultMarkerOption(new LatLng(12.9589, 77.6492));
     }
@@ -183,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.i(LOG_TAG, "lastLocation, "+ lastLocation);
         Log.i(LOG_TAG,"lastLocationLatitute, " + lastLocation.getLatitude() +" "+ lastLocation.getLongitude());
         totalShiftTime.setText(" "+ lastLocation.getLatitude());
-        assignLocationValues(lastLocation);
+        assignLocationValues(lastLocation, "Destination");
         setDefaultMarkerOption(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
 
         getDestinationLatLong(new LatLng(lastLocation.getLatitude(),lastLocation.getLongitude()));
@@ -267,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                             lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
                             Log.d(LOG_TAG, "lastLocation," + lastLocation);
-                            assignLocationValues(lastLocation);
+                            assignLocationValues(lastLocation, "StartLocation");
                             setDefaultMarkerOption(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
                         }else{
                             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_LOCATION_REQUEST_CODE);
@@ -289,28 +291,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         markerOption.position(latLng);
     }
 
-    private void assignLocationValues(Location currentLocation) {
+    private void assignLocationValues(Location currentLocation, String locationTitle) {
         if ( currentLocation != null) {
             latitudeValue = currentLocation.getLatitude();
             longitudeValue = currentLocation.getLongitude();
             Log.d(LOG_TAG, "Latitude: " + latitudeValue + " Longitude: " + longitudeValue);
-            markStartingLocationOnMap(googleMap, new LatLng(latitudeValue, longitudeValue));
+            markStartingLocationOnMap(googleMap, new LatLng(latitudeValue, longitudeValue), locationTitle);
             addCameraToMap(new LatLng(latitudeValue, longitudeValue));
         }
     }
 
-    private void markStartingLocationOnMap(GoogleMap googleMap, LatLng latLng) {
-        googleMap.addMarker(new MarkerOptions().position(latLng).title("Current location"));
+    private void markStartingLocationOnMap(GoogleMap googleMap, LatLng latLng, String locationTitle) {
+        googleMap.addMarker(new MarkerOptions().position(latLng).title(locationTitle));
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
     }
 
     private void addCameraToMap(LatLng latLng) {
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(latLng)
-                .zoom(8)
+                .zoom(17)
                 .build();
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-
     }
 
     @Override
@@ -342,9 +343,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         googleMap.addMarker(markerOption);
         googleMap.addMarker(new MarkerOptions().position(latLng));
         LatLng defaultLocation = markerOption.getPosition();
-        destinationLatLng = latLng;
+        //LatLng startLocation = new LatLng(12.953952, 77.648277);
+        Log.i(LOG_TAG, "defaultLocation, " + defaultLocation.latitude + " ," + defaultLocation.longitude);
+        destinationLatLng = new LatLng(12.9655, 77.6418);
+        markStartingLocationOnMap(googleMap, destinationLatLng, "Destination");
         //use Google Direction API to get the route between these Locations
-        String directionApiPath = Helper.getUrl(String.valueOf(defaultLocation.latitude), String.valueOf(defaultLocation.longitude),
+        String directionApiPath = Helper.getUrl(String.valueOf(startLocation.getLatitude()), String.valueOf(startLocation.getLongitude()),
                 String.valueOf(destinationLatLng.latitude), String.valueOf(destinationLatLng.longitude));
         Log.d(LOG_TAG, "Path " + directionApiPath);
         getDirectionFromDirectionApiServer(directionApiPath);
@@ -446,7 +450,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Polyline polyline = map.addPolyline(options);
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(new LatLng(positions.get(1).latitude, positions.get(1).longitude))
-                .zoom(9)
+                .zoom(17)
                 .build();
         map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
