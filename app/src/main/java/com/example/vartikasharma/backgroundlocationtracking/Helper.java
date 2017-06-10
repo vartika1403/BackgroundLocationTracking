@@ -9,7 +9,7 @@ public class Helper {
 
     public static String getUrl(String originalLat, String originalLong,
                                 String destinationLat, String destinationLong) {
-        return Helper.DIRECTION_API +originalLat+ "," +originalLong+
-                ",&destination="+destinationLat+","+destinationLong+"&key="+API_KEY;
+        return Helper.DIRECTION_API + originalLat + "," + originalLong +
+                "&destination="+ destinationLat +","+ destinationLong +"";
     }
 }

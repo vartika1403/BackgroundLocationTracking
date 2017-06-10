@@ -14,10 +14,10 @@ public class VolleySingleton {
     private static VolleySingleton volleySingleton;
     private RequestQueue requestQueue;
     private ImageLoader imageLoader;
-    private static Context context;
+    private static Context mcontext;
 
     private VolleySingleton(Context context) {
-        context = context;
+        mcontext = context;
         requestQueue = getRequestQueue();
         imageLoader = new ImageLoader(requestQueue, new ImageLoader.ImageCache() {
             private final LruCache<String, Bitmap> cache = new LruCache<String, Bitmap>(20);
@@ -43,7 +43,7 @@ public class VolleySingleton {
 
     public RequestQueue getRequestQueue() {
         if (requestQueue == null) {
-            requestQueue = Volley.newRequestQueue(context.getApplicationContext());
+            requestQueue = Volley.newRequestQueue(mcontext.getApplicationContext());
         }
         return requestQueue;
     }
