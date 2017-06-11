@@ -447,7 +447,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void drawRouteOnMap(GoogleMap map, List<LatLng> positions){
         PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
         options.addAll(positions);
-        Polyline polyline = map.addPolyline(options);
+      //  Polyline polyline = map.addPolyline(options);
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(new LatLng(positions.get(1).latitude, positions.get(1).longitude))
                 .zoom(17)
