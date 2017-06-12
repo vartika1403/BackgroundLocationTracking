@@ -54,37 +54,31 @@ import butterknife.OnClick;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener,
         GoogleMap.OnMapClickListener, GoogleApiClient.ConnectionCallbacks {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
-    // Google Map
-    private GoogleMap googleMap;
-
-    // Declaring a Location Manager
-    protected LocationManager locationManager;
-
-    //instance of LocationManager
-    protected LocationTracker locationTracker;
-
-    //Connection detector class
-    protected ConnectionDetector connectionDetector;
-
-    //flag for internet connection status
-    boolean isInternetPresent = false;
-    private GoogleApiClient googleApiClient;
-    private Location lastLocation;
-    private Location startLocation;
-    private LocationRequest locationRequest;
-
     private static final int PERMISSION_LOCATION_REQUEST_CODE = 100;
-    private List<LatLng> latLngList;
-    private MarkerOptions markerOption;
-    DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-
-    private Date start_date;
     @BindView(R.id.start_shift)
     public Button startShift;
     @BindView(R.id.stop_shift)
     public Button stopShift;
     @BindView(R.id.total_shift_time_value)
     public TextView totalShiftTime;
+    // Declaring a Location Manager
+    protected LocationManager locationManager;
+    //instance of LocationManager
+    protected LocationTracker locationTracker;
+    //Connection detector class
+    protected ConnectionDetector connectionDetector;
+    //flag for internet connection status
+    boolean isInternetPresent = false;
+    DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    // Google Map
+    private GoogleMap googleMap;
+    private GoogleApiClient googleApiClient;
+    private Location lastLocation;
+    private Location startLocation;
+    private LocationRequest locationRequest;
+    private List<LatLng> latLngList;
+    private MarkerOptions markerOption;
+    private Date start_date;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -178,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         assignLocationValues(lastLocation, "Destination");
         setDefaultMarkerOption(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
 
-        getDestinationLatLong(new LatLng(lastLocation.getLatitude(),lastLocation.getLongitude()));
+        getDestinationLatLong(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
     }
 
     /**
@@ -209,6 +203,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onStart();
         googleApiClient.connect();
     }
+
     @Override
     protected void onStop() {
         googleApiClient.disconnect();
@@ -253,12 +248,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     case LocationSettingsStatusCodes.SUCCESS:
                         if (ActivityCompat.checkSelfPermission(getApplicationContext(),
                                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                                && ActivityCompat.checkSelfPermission(getApplicationContext(), 
+                                && ActivityCompat.checkSelfPermission(getApplicationContext(),
                                 Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                             lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
                             assignLocationValues(lastLocation, "StartLocation");
                             setDefaultMarkerOption(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
-                        }else{
+                        } else {
                             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_LOCATION_REQUEST_CODE);
                         }
                         break;
@@ -270,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void setDefaultMarkerOption(LatLng latLng) {
-        if(markerOption == null){
+        if (markerOption == null) {
             Log.d(LOG_TAG, "default marker location, " + latLng);
             markerOption = new MarkerOptions();
         }
@@ -278,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void assignLocationValues(Location currentLocation, String locationTitle) {
-        if ( currentLocation != null) {
+        if (currentLocation != null) {
             double latitudeValue = currentLocation.getLatitude();
             double longitudeValue = currentLocation.getLongitude();
             markStartingLocationOnMap(googleMap, new LatLng(latitudeValue, longitudeValue), locationTitle);
@@ -354,30 +349,32 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onResponse(DirectionObject response) {
                 try {
-                    if(response.getStatus().equals("OK")){
+                    if (response.getStatus().equals("OK")) {
                         List<LatLng> directions = getDirectionPolylines(response.getRoutes());
                         drawRouteOnMap(googleMap, directions);
-                    }else{
+                    } else {
                         Toast.makeText(MainActivity.this, "error in server", Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            };
+            }
+
+            ;
         };
     }
 
     private List<LatLng> getDirectionPolylines(List<RouteObject> routes) {
         List<LatLng> directionList = new ArrayList<LatLng>();
-        for(RouteObject route : routes){
+        for (RouteObject route : routes) {
             List<LegsObject> legs = route.getLegs();
-            for(LegsObject leg : legs){
+            for (LegsObject leg : legs) {
                 List<StepsObject> steps = leg.getSteps();
-                for(StepsObject step : steps){
+                for (StepsObject step : steps) {
                     PolyLineObject polyline = step.getPolyline();
                     String points = polyline.getPoints();
                     List<LatLng> singlePolyline = decodePoly(points);
-                    for (LatLng direction : singlePolyline){
+                    for (LatLng direction : singlePolyline) {
                         directionList.add(direction);
                     }
                 }
@@ -415,7 +412,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return poly;
     }
 
-    private void drawRouteOnMap(GoogleMap map, List<LatLng> positions){
+    private void drawRouteOnMap(GoogleMap map, List<LatLng> positions) {
         PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
         options.addAll(positions);
         CameraPosition cameraPosition = new CameraPosition.Builder()
