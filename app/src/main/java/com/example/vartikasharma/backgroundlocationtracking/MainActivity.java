@@ -38,10 +38,11 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -70,17 +71,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleApiClient googleApiClient;
     private Location lastLocation;
     private Location startLocation;
-    private LatLng destinationLatLng;
     private LocationRequest locationRequest;
 
     private static final int PERMISSION_LOCATION_REQUEST_CODE = 100;
     private List<LatLng> latLngList;
     private MarkerOptions markerOption;
-    private double latitudeValue = 0.0;
-    private double longitudeValue = 0.0;
+    DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
     private Date start_date;
-    private Date stop_date;
     @BindView(R.id.start_shift)
     public Button startShift;
     @BindView(R.id.stop_shift)
@@ -144,24 +142,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (locationTracker.canGetLocation()) {
             Log.d(LOG_TAG, "latitute: " + locationTracker.getLatitude() + ",longitute: " + locationTracker.getLongitude());
         }
-        start_date = new Date(System.currentTimeMillis());
-        Log.d(LOG_TAG, "start current date, " + start_date);
+        startShift.setBackgroundResource(R.color.colorGreen);
+        stopShift.setBackgroundResource(R.color.colorDefault);
+        start_date = new Date();
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
         lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
         startLocation = lastLocation;
-        Log.d(LOG_TAG, "startlastLocation," + lastLocation);
         assignLocationValues(lastLocation, "StartLocation");
         setDefaultMarkerOption(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
-       // setDefaultMarkerOption(new LatLng(12.9589, 77.6492));
     }
 
     @OnClick(R.id.stop_shift)
@@ -169,27 +159,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (locationTracker.canGetLocation()) {
             Log.d(LOG_TAG, "latitute: " + locationTracker.getLatitude() + ",longitute: " + locationTracker.getLongitude());
         }
-//        stop_date = new Date(System.currentTimeMillis());
-        //      Log.d(LOG_TAG, "stop current date, " + stop_date);
-//        long startDate = start_date.getTime();
-        // long stopDate = stop_date.getTime();
-        //  long totalTime = stopDate - startDate;
-        // Log.d(LOG_TAG, "duration, " + totalTime/60);
-        //totalShiftTime.setText(" " + totalTime);
-        // setDefaultMarkerOption(new LatLng(locationTracker.getLatitude(), locationTracker.getLongitude()));
+        stopShift.setBackgroundResource(R.color.colorRed);
+        startShift.setBackgroundResource(R.color.colorDefault);
+        Date stop_date = new Date();
+        if (stop_date != null && start_date != null) {
+            long diffTime = stop_date.getTime() - start_date.getTime();
+            long diffMinutes = diffTime / (60 * 1000) % 60;
+            long diffHours = diffTime / (60 * 60 * 1000);
+            String duration = diffHours + "h" + " " + diffMinutes + "m";
+            totalShiftTime.setText(duration);
+        }
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             return;
         }
         lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-        Log.i(LOG_TAG, "lastLocation, "+ lastLocation);
-        Log.i(LOG_TAG,"lastLocationLatitute, " + lastLocation.getLatitude() +" "+ lastLocation.getLongitude());
-        totalShiftTime.setText(" "+ lastLocation.getLatitude());
         assignLocationValues(lastLocation, "Destination");
         setDefaultMarkerOption(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
 
         getDestinationLatLong(new LatLng(lastLocation.getLatitude(),lastLocation.getLongitude()));
-        //getDestinationLatLong(latLng);
     }
 
     /**
@@ -262,13 +251,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 final Status status = result.getStatus();
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
-                        Log.d(LOG_TAG, "Connection method has been called");
                         if (ActivityCompat.checkSelfPermission(getApplicationContext(),
                                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                                 && ActivityCompat.checkSelfPermission(getApplicationContext(), 
                                 Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                             lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-                            Log.d(LOG_TAG, "lastLocation," + lastLocation);
                             assignLocationValues(lastLocation, "StartLocation");
                             setDefaultMarkerOption(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
                         }else{
@@ -287,15 +274,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.d(LOG_TAG, "default marker location, " + latLng);
             markerOption = new MarkerOptions();
         }
-        Log.d(LOG_TAG, "default marker location, "+ latLng);
         markerOption.position(latLng);
     }
 
     private void assignLocationValues(Location currentLocation, String locationTitle) {
         if ( currentLocation != null) {
-            latitudeValue = currentLocation.getLatitude();
-            longitudeValue = currentLocation.getLongitude();
-            Log.d(LOG_TAG, "Latitude: " + latitudeValue + " Longitude: " + longitudeValue);
+            double latitudeValue = currentLocation.getLatitude();
+            double longitudeValue = currentLocation.getLongitude();
             markStartingLocationOnMap(googleMap, new LatLng(latitudeValue, longitudeValue), locationTitle);
             addCameraToMap(new LatLng(latitudeValue, longitudeValue));
         }
@@ -309,7 +294,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void addCameraToMap(LatLng latLng) {
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(latLng)
-                .zoom(17)
+                .zoom(8)
                 .build();
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
@@ -326,31 +311,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             latLngList.clear();
         }
         latLngList.add(latLng);
-        Log.d(LOG_TAG, "Marker number " + latLngList.size());
         getDestinationLatLong(latLng);
         googleMap.addMarker(markerOption);
         googleMap.addMarker(new MarkerOptions().position(latLng));
-        LatLng defaultLocation = markerOption.getPosition();
-        destinationLatLng = latLng;
-      /*  //use Google Direction API to get the route between these Locations
-        String directionApiPath = Helper.getUrl(String.valueOf(defaultLocation.latitude), String.valueOf(defaultLocation.longitude),
-                String.valueOf(destinationLatLng.latitude), String.valueOf(destinationLatLng.longitude));
-        Log.d(LOG_TAG, "Path " + directionApiPath);
-        getDirectionFromDirectionApiServer(directionApiPath);*/
     }
 
     private void getDestinationLatLong(LatLng latLng) {
         googleMap.addMarker(markerOption);
         googleMap.addMarker(new MarkerOptions().position(latLng));
-        LatLng defaultLocation = markerOption.getPosition();
-        //LatLng startLocation = new LatLng(12.953952, 77.648277);
-        Log.i(LOG_TAG, "defaultLocation, " + defaultLocation.latitude + " ," + defaultLocation.longitude);
-        destinationLatLng = new LatLng(12.9655, 77.6418);
-        markStartingLocationOnMap(googleMap, destinationLatLng, "Destination");
+        markStartingLocationOnMap(googleMap, latLng, "Destination");
         //use Google Direction API to get the route between these Locations
         String directionApiPath = Helper.getUrl(String.valueOf(startLocation.getLatitude()), String.valueOf(startLocation.getLongitude()),
-                String.valueOf(destinationLatLng.latitude), String.valueOf(destinationLatLng.longitude));
-        Log.d(LOG_TAG, "Path " + directionApiPath);
+                String.valueOf(latLng.latitude), String.valueOf(latLng.longitude));
         getDirectionFromDirectionApiServer(directionApiPath);
     }
 
@@ -382,7 +354,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onResponse(DirectionObject response) {
                 try {
-                    Log.d("JSON Response", response.toString());
                     if(response.getStatus().equals("OK")){
                         List<LatLng> directions = getDirectionPolylines(response.getRoutes());
                         drawRouteOnMap(googleMap, directions);
@@ -447,10 +418,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void drawRouteOnMap(GoogleMap map, List<LatLng> positions){
         PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
         options.addAll(positions);
-      //  Polyline polyline = map.addPolyline(options);
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(new LatLng(positions.get(1).latitude, positions.get(1).longitude))
-                .zoom(17)
+                .zoom(12)
                 .build();
         map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
@@ -468,8 +438,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onLocationChanged(Location location) {
 
-        Log.i(LOG_TAG,"totalShiftTime, " + location.getLatitude() +" "+ location.getLongitude());
-        totalShiftTime.setText(" "+ location.getLatitude());
     }
 
     @Override
