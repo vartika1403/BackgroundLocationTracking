@@ -314,7 +314,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void getDestinationLatLong(LatLng latLng) {
         googleMap.addMarker(markerOption);
         googleMap.addMarker(new MarkerOptions().position(latLng));
-        markStartingLocationOnMap(googleMap, latLng, "Destination");
         //use Google Direction API to get the route between these Locations
         String directionApiPath = Helper.getUrl(String.valueOf(startLocation.getLatitude()), String.valueOf(startLocation.getLongitude()),
                 String.valueOf(latLng.latitude), String.valueOf(latLng.longitude));
