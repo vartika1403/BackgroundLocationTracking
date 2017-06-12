@@ -172,7 +172,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         assignLocationValues(lastLocation, "Destination");
         setDefaultMarkerOption(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
 
-        getDestinationLatLong(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
+        if (startLocation != null) {
+            getDestinationLatLong(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
+        }
     }
 
     /**
