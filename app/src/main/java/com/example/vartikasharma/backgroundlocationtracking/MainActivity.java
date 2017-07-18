@@ -4,11 +4,13 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -38,6 +40,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 
@@ -79,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private List<LatLng> latLngList;
     private MarkerOptions markerOption;
     private Date start_date;
+    private List<LatLng> directions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,6 +123,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (locationTracker.canGetLocation()) {
             Log.d(LOG_TAG, "latitute: " + locationTracker.getLatitude() + ",longitute: " + locationTracker.getLongitude());
         }
+
+        googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                Log.i(LOG_TAG, "latlng, " + latLng);
+                Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
+                        Uri.parse("http://maps.google.com/maps?saddr=" + startLocation.getLatitude() + "," + startLocation.getLongitude()
+                                + "&daddr=" + 12.9592 + "," + 77.6974));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.addCategory(Intent.CATEGORY_LAUNCHER);
+                intent.setClassName("com.google.android.apps.maps", "com.google.android.maps.MapsActivity");
+                startActivity(intent);
+            }
+        });
 
 
     }
@@ -168,13 +186,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             return;
         }
+//        lastLocation = new LatLng(12.9655, 77.6418);
         lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
         assignLocationValues(lastLocation, "Destination");
         setDefaultMarkerOption(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
+        markStartingLocationOnMap(googleMap, new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()), "Destination");
 
         if (startLocation != null) {
             getDestinationLatLong(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
         }
+
     }
 
     /**
@@ -307,10 +328,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             refreshMap(googleMap);
             latLngList.clear();
         }
+        Log.i(LOG_TAG, "Lat lng, " + latLng);
         latLngList.add(latLng);
         getDestinationLatLong(latLng);
         googleMap.addMarker(markerOption);
         googleMap.addMarker(new MarkerOptions().position(latLng));
+        Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
+                Uri.parse("http://maps.google.com/maps?saddr=" + startLocation.getLatitude() + "," + startLocation.getLongitude()
+                        + "&daddr=" + 12.9592 + "," + 77.6974));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        intent.setClassName("com.google.android.apps.maps", "com.google.android.maps.MapsActivity");
+        startActivity(intent);
     }
 
     private void getDestinationLatLong(LatLng latLng) {
@@ -318,7 +347,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         googleMap.addMarker(new MarkerOptions().position(latLng));
         //use Google Direction API to get the route between these Locations
         String directionApiPath = Helper.getUrl(String.valueOf(startLocation.getLatitude()), String.valueOf(startLocation.getLongitude()),
-                String.valueOf(latLng.latitude), String.valueOf(latLng.longitude));
+                String.valueOf(12.9592), String.valueOf(77.6974), true);
+        Log.i(LOG_TAG, "directionApi, " + directionApiPath);
         getDirectionFromDirectionApiServer(directionApiPath);
     }
 
@@ -351,7 +381,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onResponse(DirectionObject response) {
                 try {
                     if (response.getStatus().equals("OK")) {
-                        List<LatLng> directions = getDirectionPolylines(response.getRoutes());
+                        directions = getDirectionPolylines(response.getRoutes());
+                      //  directions.contains()
                         drawRouteOnMap(googleMap, directions);
                     } else {
                         Toast.makeText(MainActivity.this, "error in server", Toast.LENGTH_SHORT).show();
@@ -417,11 +448,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
         options.addAll(positions);
         googleMap.addPolyline(options);
-        CameraPosition cameraPosition = new CameraPosition.Builder()
-                .target(new LatLng(positions.get(1).latitude, positions.get(1).longitude))
-                .zoom(12)
-                .build();
-        map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+        for (int i = 0 ; i < positions.size(); i++) {
+            Log.i(LOG_TAG, "position at i, " + positions.get(i));
+            CameraPosition cameraPosition = new CameraPosition.Builder()
+                    .target(new LatLng(positions.get(i).latitude, positions.get(i).longitude))
+                    .zoom(12)
+                    .build();
+            map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        }
     }
 
     private void refreshMap(GoogleMap googleMap) {
